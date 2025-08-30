@@ -1,1 +1,7 @@
-# SIMPLE BUT PRODUCTIVE i3 CONFIG
+# simple i3 config
+
+- rofi
+- polybar
+- picom
+- nvim 
+- kitty 
