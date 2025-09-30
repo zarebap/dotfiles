@@ -1,0 +1,52 @@
+{
+  "position": "top",
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["custom/arch"],
+  "modules-right": ["network", "pulseaudio", "battery", "clock", "memory"],
+	"custom/arch": {
+    "format": "<span size='14000' foreground='#89b4fa'></span>",
+    "tooltip": "Arch Linux"
+  },
+  "clock": {
+    "format": "<span foreground='#f5c2e7'>   </span>{:%a %d %H:%M}",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+  },
+  "battery": {
+    "states": {
+      "warning": 30,
+      "critical": 15
+    },
+    "format": "<span size='13000' foreground='#a6e3a1'>{icon} </span> {capacity}%",
+    "format-warning": "<span size='13000' foreground='#B1E3AD'>{icon} </span> {capacity}%",
+    "format-critical": "<span size='13000' foreground='#E38C8F'>{icon} </span> {capacity}%",
+    "format-charging": "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%",
+    "format-plugged": "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%",
+    "format-alt": "<span size='13000' foreground='#B1E3AD'>{icon} </span> {time}",
+    "format-full": "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%",
+    "format-icons": ["", "", "", "", ""],
+    "tooltip-format": "{time}"
+  },
+  "network": {
+  "format-wifi": "<span size='13000' foreground='#f5e0dc'>  </span>{essid}",
+  "format-ethernet": "<span size='13000' foreground='#f5e0dc'>󰈀  </span>{ifname} ({ipaddr})",
+  "format-linked": "<span size='13000' foreground='#f5e0dc'>󰈂  </span>{ifname} (No IP)",
+  "format-disconnected": "<span size='13000' foreground='#f5e0dc'>  </span>Disconnected",
+  "tooltip-format-wifi": "Signal Strength: {signalStrength}%"
+},
+  "pulseaudio": {
+      "format": "{icon}  {volume}%",
+      "format-muted": "",
+      "format-icons": {
+          "default": ["", "", " "]
+      },
+      "on-click": "pavucontrol"
+  },
+	"memory": {
+  "interval": 30,
+  "format": "<span size='13000' foreground='#cba6f7'>  {used:0.1f}G/{total:0.1f}G</span>",
+  "tooltip-format": "<span foreground='#cba6f7'>RAM in use: {used:0.1f}G\nTotal: {total:0.1f}G\nFree: {avail:0.1f}G</span>"
+}
+
+
+
+}
