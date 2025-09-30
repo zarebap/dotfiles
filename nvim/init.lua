@@ -98,6 +98,7 @@ vim.g.have_nerd_font = true
 vim.opt.showmatch = true
 vim.opt.matchtime = 3
 vim.opt.termguicolors = true
+vim.opt.guifont = 'JetBrainsMono Nerd Font:h17'
 
 -- Make line numbers default
 vim.opt.relativenumber = true
@@ -135,12 +136,14 @@ vim.opt.smartcase = true
 vim.opt.signcolumn = 'yes'
 -- Zapisz bieżący plik
 vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = 'Save file' })
+-- _ = pusty wiersz powyżej
+vim.keymap.set('n', '_', ':put! _<CR>', { silent = true })
+
+-- + = pusty wiersz poniżej
+vim.keymap.set('n', '+', ':put _<CR>', { silent = true })
 
 -- Zapisz wszystkie pliki
 vim.keymap.set('n', '<leader>W', ':wa<CR>', { desc = 'Save all files' })
-
-vim.keymap.set('n', '<leader>dd', '<cmd>DevdocsOpen<CR>', { desc = 'Open DevDocs' })
-vim.keymap.set('n', '<leader>df', '<cmd>DevdocsFetch<CR>', { desc = 'Fetch DevDocs' })
 
 vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
   expr = true,
@@ -269,7 +272,24 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  { 'luckasRanarison/nvim-devdocs' },
+  {
+    '3rd/image.nvim',
+    config = function()
+      require('image').setup()
+    end,
+  },
+  {
+    'nvim-mini/mini.icons',
+  },
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.icons' }, -- if you use standalone mini plugins
+    ---@module 'render-markdown'
+    ---@type render.md.UserConfig
+    opts = {},
+  },
+
   {
     'nvim-telescope/telescope-file-browser.nvim',
     dependencies = { 'nvim-telescope/telescope.nvim', 'nvim-lua/plenary.nvim' },
@@ -445,9 +465,6 @@ require('lazy').setup({
         end,
       },
       { 'nvim-telescope/telescope-ui-select.nvim' },
-
-      -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -1054,8 +1071,8 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
@@ -1159,9 +1176,7 @@ require('nvim-treesitter.configs').setup {
     additional_vim_regex_highlighting = false,
   },
 }
-local lspconfig = require 'lspconfig'
-
-lspconfig.ts_ls.setup {
+vim.lsp.config['ts_ls'] = {
   settings = {
     typescript = {
       format = {
@@ -1176,39 +1191,18 @@ lspconfig.ts_ls.setup {
         tabSize = 2,
         convertTabsToSpaces = true,
       },
+      implicitProjectConfig = {
+        checkJs = true, -- ⬅️ tutaj będzie działać poprawnie
+      },
     },
   },
   on_attach = function(client, bufnr)
-    -- Pilnuj ustawień w Neovim
     vim.bo[bufnr].tabstop = 2
     vim.bo[bufnr].shiftwidth = 2
     vim.bo[bufnr].softtabstop = 2
     vim.bo[bufnr].expandtab = true
   end,
 }
-require('nvim-devdocs').setup {
-  dir_path = vim.fn.stdpath 'data' .. '/devdocs', -- installation directory
-  telescope = {}, -- passed to the telescope picker
-  filetypes = {
-    -- extends the filetype to docs mappings used by the `DevdocsOpenCurrent` command, the version doesn't have to be specified
-    -- scss = "sass",
-    -- javascript = { "node", "javascript" }
-  },
-  float_win = { -- passed to nvim_open_win(), see :h api-floatwin
-    relative = 'editor',
-    height = 25,
-    width = 100,
-    border = 'rounded',
-  },
-  wrap = true, -- text wrap, only applies to floating window
-  previewer_cmd = glow, -- for example: "glow"
-  cmd_args = { '-s', 'dark', '-w', '50' }, -- example using glow: { "-s", "dark", "-w", "80" }
-  cmd_ignore = {}, -- ignore cmd rendering for the listed docs
-  picker_cmd = true, -- use cmd previewer in picker preview
-  picker_cmd_args = { '-s', 'dark', '-w', '50' }, -- example using glow: { "-s", "dark", "-w", "50" }
-  mappings = { -- keymaps for the doc buffer
-    open_in_browser = '',
-  },
-  ensure_installed = {}, -- get automatically installed
-  after_open = function(bufnr) end, -- callback that runs after the Devdocs window is opened. Devdocs buffer ID will be passed in
-}
+
+-- aktywacja serwera
+vim.lsp.enable 'ts_ls'

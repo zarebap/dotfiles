@@ -4,4 +4,10 @@
 - polybar
 - picom
 - nvim 
-- kitty 
+- kitty
+
+# simple hyprland config
+- waybar
+- hyprlock
+- hyprpaper
+
