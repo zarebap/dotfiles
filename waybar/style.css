@@ -35,7 +35,7 @@ button:hover {
 }
 
 #workspaces button {
-	padding: 0 4px;
+	padding: 0 6px;
 }
 
 #workspaces button.focused {
@@ -127,5 +127,24 @@ button:hover {
 }
 
 #custom-arch {
-	margin-right: 12px;
+	margin-right: 20px;
+	margin-left: 15px;
+}
+
+#custom-gpu-usage {
+	color: #f9e2af;
+	font-size: 16px;
+	font-weight: bold;
+	border-bottom: 2px solid #f9e2af;
+	padding-left: 5px;
+	padding-right: 5px;
+	margin-bottom: 2px;
+}
+
+#memory {
+	border-bottom: 2px solid #cba6f7;
+}
+
+#cpu {
+	border-bottom: 2px solid #fab387;
 }

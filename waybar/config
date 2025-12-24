@@ -1,16 +1,51 @@
 {
   "position": "top",
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["custom/arch"],
-  "modules-right": ["network", "pulseaudio", "battery", "clock", "memory"],
-	"custom/arch": {
+  "modules-left": ["custom/arch", "hyprland/workspaces", "tray"],
+  "modules-center": [],
+  "modules-right": ["network", "pulseaudio", "battery", "cpu", "custom/gpu-usage", "memory", "clock"],
+
+  "custom/arch": {
     "format": "<span size='14000' foreground='#89b4fa'></span>",
     "tooltip": "Arch Linux"
   },
-  "clock": {
-    "format": "<span foreground='#f5c2e7'>   </span>{:%a %d %H:%M}",
-    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+
+  "cpu": {
+    "interval": 5,
+    "format": "<span size='13000' foreground='#fab387'>  {usage}%</span>",
+    "tooltip-format": "CPU usage: {usage}%"
   },
+
+"custom/gpu-usage": {
+  "format": "{icon} {text}",
+  "exec": "gpu-usage-waybar",
+  "return-type": "json",
+  "format-icons": "󰾲",
+},
+
+
+  "memory": {
+    "interval": 30,
+    "format": "<span size='13000' foreground='#cba6f7'> 󰆼  {used:0.1f}G/{total:0.1f}G</span>",
+    "tooltip-format": "RAM in use: {used:0.1f}G\nTotal: {total:0.1f}G\nFree: {avail:0.1f}G"
+  },
+
+  "network": {
+    "format-wifi": "<span size='13000' foreground='#f5e0dc'>  </span>{essid}",
+    "format-ethernet": "<span size='13000' foreground='#f5e0dc'>󰈀  </span>{ifname} ({ipaddr})",
+    "format-linked": "<span size='13000' foreground='#f5e0dc'>󰈂  </span>{ifname} (No IP)",
+    "format-disconnected": "<span size='13000' foreground='#f5e0dc'>  </span>Disconnected",
+    "tooltip-format-wifi": "Signal Strength: {signalStrength}%"
+  },
+
+  "pulseaudio": {
+    "format": "{icon}  {volume}%",
+    "format-muted": "",
+    "format-icons": {
+      "default": ["", "", " "]
+    },
+    "on-click": "pavucontrol"
+  },
+
   "battery": {
     "states": {
       "warning": 30,
@@ -26,27 +61,15 @@
     "format-icons": ["", "", "", "", ""],
     "tooltip-format": "{time}"
   },
-  "network": {
-  "format-wifi": "<span size='13000' foreground='#f5e0dc'>  </span>{essid}",
-  "format-ethernet": "<span size='13000' foreground='#f5e0dc'>󰈀  </span>{ifname} ({ipaddr})",
-  "format-linked": "<span size='13000' foreground='#f5e0dc'>󰈂  </span>{ifname} (No IP)",
-  "format-disconnected": "<span size='13000' foreground='#f5e0dc'>  </span>Disconnected",
-  "tooltip-format-wifi": "Signal Strength: {signalStrength}%"
-},
-  "pulseaudio": {
-      "format": "{icon}  {volume}%",
-      "format-muted": "",
-      "format-icons": {
-          "default": ["", "", " "]
-      },
-      "on-click": "pavucontrol"
+
+  "clock": {
+    "format": "<span foreground='#f5c2e7'>   </span>{:%a %d %H:%M}",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
   },
-	"memory": {
-  "interval": 30,
-  "format": "<span size='13000' foreground='#cba6f7'>  {used:0.1f}G/{total:0.1f}G</span>",
-  "tooltip-format": "<span foreground='#cba6f7'>RAM in use: {used:0.1f}G\nTotal: {total:0.1f}G\nFree: {avail:0.1f}G</span>"
+  "tray": {
+    "icon-size": 18,
+    "spacing": 10
 }
 
-
-
 }
+

@@ -1,4 +1,4 @@
---[[
+--[[init
 
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
@@ -103,7 +103,7 @@ vim.opt.guifont = 'JetBrainsMono Nerd Font:h17'
 -- Make line numbers default
 vim.opt.relativenumber = true
 vim.opt.number = true
-vim.opt.tabstop = 2
+vim.opt.tabstop = 4
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
 -- vim.opt.relativenumber = true
@@ -161,6 +161,8 @@ vim.opt.timeoutlen = 300
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 
+vim.api.nvim_set_keymap('n', '<leader>t', ':belowright 7split | terminal<CR>', { noremap = true, silent = true })
+
 vim.keymap.set('n', '<space>fb', ':Telescope file_browser<CR>')
 
 -- open file_browser with the path of the current buffer
@@ -170,6 +172,14 @@ vim.keymap.set('n', '<space>fb', ':Telescope file_browser path=%:p:h select_buff
 vim.keymap.set('n', '<space>fb', function()
   require('telescope').extensions.file_browser.file_browser()
 end)
+
+-- Normal mode
+vim.api.nvim_set_keymap('n', '<A-j>', ':m .+1<CR>==', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<A-k>', ':m .-2<CR>==', { noremap = true, silent = true })
+
+-- Visual mode
+vim.api.nvim_set_keymap('v', '<A-j>', ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<A-k>', ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
 
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
@@ -218,10 +228,53 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+vim.g.mapleader = ' '
+
 vim.keymap.set('n', '<leader>o', function()
-  vim.fn.jobstart({ 'xdg-open', vim.fn.expand '<cfile>' }, { detach = true })
-  print 'Link opened in browser'
-end, { desc = 'Open link under cursor' })
+  local line = vim.api.nvim_get_current_line()
+
+  -- Extract Markdown link or fallback to file under cursor
+  local path = line:match '%(([^)]+)%)' or vim.fn.expand '<cfile>'
+  if not path or path == '' then
+    print 'No path or link found under cursor'
+    return
+  end
+
+  -- Expand ~ and relative paths
+  path = vim.fn.expand(path)
+
+  -- Open URLs with default browser
+  if path:match '^https?://' then
+    vim.fn.jobstart({ 'xdg-open', path }, { detach = true })
+    print('Opening URL: ' .. path)
+    return
+  end
+
+  -- Check if file exists
+  if vim.fn.filereadable(path) ~= 1 then
+    print('File not found: ' .. path)
+    return
+  end
+
+  -- Get file extension
+  local ext = path:match '^.+%.([^.]+)$'
+  if not ext then
+    print('Cannot detect file extension: ' .. path)
+    return
+  end
+  ext = ext:lower()
+
+  -- Open based on type
+  if ext == 'pdf' then
+    vim.fn.jobstart({ 'zathura', path }, { detach = true })
+    print('Opening PDF: ' .. path)
+  elseif ext == 'jpg' or ext == 'jpeg' or ext == 'png' or ext == 'gif' then
+    vim.fn.jobstart({ 'feh', path }, { detach = true })
+    print('Opening image: ' .. path)
+  else
+    print('Unknown file type: ' .. path)
+  end
+end, { desc = 'Open file or link under cursor (PDF/Image/URL)' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -260,6 +313,42 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     vim.cmd 'VimtexClean!' -- usuwa wszystkie pliki tymczasowe
   end,
 })
+
+-- Only show diagnostics in Insert mode for Markdown files
+
+-- Function to toggle diagnostics in the current buffer
+local function toggle_diagnostics(enable)
+  local bufnr = vim.api.nvim_get_current_buf()
+  if enable then
+    vim.diagnostic.show(nil, bufnr) -- show diagnostics in current buffer
+  else
+    vim.diagnostic.hide(nil, bufnr) -- hide diagnostics in current buffer
+  end
+end
+
+-- Autocommand: run only for Markdown buffers
+vim.api.nvim_create_autocmd({ 'InsertEnter', 'InsertLeave', 'BufEnter' }, {
+  pattern = '*.md',
+  callback = function()
+    if vim.bo.filetype ~= 'markdown' then
+      return
+    end
+
+    local mode = vim.fn.mode()
+    if mode == 'i' then
+      toggle_diagnostics(true) -- Insert mode → show
+    else
+      toggle_diagnostics(false) -- Normal/Visual → hide
+    end
+  end,
+})
+-- Optional: hide diagnostics when opening Markdown files (start clean)
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = '*.md',
+  callback = function()
+    vim.diagnostic.hide(nil, 0)
+  end,
+})
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -272,6 +361,14 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  {
+    'Godswill-255/colorviewer.nvim',
+    config = function()
+      require('colorviewer').setup {
+        symbol = '■',
+      }
+    end,
+  },
   {
     '3rd/image.nvim',
     config = function()
@@ -1176,7 +1273,10 @@ require('nvim-treesitter.configs').setup {
     additional_vim_regex_highlighting = false,
   },
 }
+local util = require 'lspconfig.util'
+
 vim.lsp.config['ts_ls'] = {
+  root_dir = util.root_pattern('package.json', 'tsconfig.json', 'jsconfig.json', '.git'),
   settings = {
     typescript = {
       format = {
@@ -1197,12 +1297,67 @@ vim.lsp.config['ts_ls'] = {
     },
   },
   on_attach = function(client, bufnr)
-    vim.bo[bufnr].tabstop = 2
-    vim.bo[bufnr].shiftwidth = 2
-    vim.bo[bufnr].softtabstop = 2
+    vim.bo[bufnr].tabstop = 4
+    vim.bo[bufnr].shiftwidth = 4
+    vim.bo[bufnr].softtabstop = 4
     vim.bo[bufnr].expandtab = true
   end,
 }
 
--- aktywacja serwera
 vim.lsp.enable 'ts_ls'
+
+vim.lsp.config['clangd'] = {
+  cmd = { 'clangd', '--fallback-style=LLVM', '--offset-encoding=utf-16' },
+
+  on_attach = function(client, bufnr)
+    vim.bo[bufnr].tabstop = 4
+    vim.bo[bufnr].shiftwidth = 4
+    vim.bo[bufnr].softtabstop = 4
+    vim.bo[bufnr].expandtab = true
+  end,
+}
+
+vim.lsp.enable 'clangd'
+
+vim.lsp.config['jdtls'] = {
+  cmd = { 'jdtls' },
+  root_dir = vim.fs.root(0, { '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' }),
+  settings = {
+    java = {
+      format = {
+        enabled = true,
+        settings = {
+          url = vim.fn.stdpath 'config' .. '/java-formatter.xml',
+          profile = 'GoogleStyle',
+        },
+      },
+      signatureHelp = { enabled = true },
+      contentProvider = { preferred = 'fernflower' },
+      configuration = {
+        runtimes = {
+          {
+            name = 'JavaSE-25',
+            path = '/usr/lib/jvm/java-25-openjdk',
+          },
+        },
+      },
+    },
+  },
+  on_attach = function(client, bufnr)
+    vim.bo[bufnr].tabstop = 4
+    vim.bo[bufnr].shiftwidth = 4
+    vim.bo[bufnr].softtabstop = 4
+    vim.bo[bufnr].expandtab = true
+
+    local opts = { buffer = bufnr, noremap = true, silent = true }
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+    vim.keymap.set('n', '<leader>f', function()
+      vim.lsp.buf.format { async = true }
+    end, opts)
+  end,
+}
+
+-- Aktywacja Javy (JDTLS)
+vim.lsp.enable 'jdtls'
